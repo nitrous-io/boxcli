@@ -33,6 +33,20 @@ module Boxcli
       end
     end
 
+    # persist the box value to redis
+    def update_attribute(key, value)
+      self[key] = value
+      save
+    end
+
+    def save
+      $redis.hset "aio:boxes", container_name, to_json
+    end
+
+    def to_json
+      JSON.generate self.to_h
+    end
+
     def self.first
       all[0]
     end
