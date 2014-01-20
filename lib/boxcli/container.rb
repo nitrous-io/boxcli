@@ -12,6 +12,11 @@ module Boxcli
       base
     end
 
+    def verify_iptable
+      p `sudo iptables -L -t nat | grep #{ip}`
+      return $?.success?
+    end
+
     def running?
       status == "running"
     end
