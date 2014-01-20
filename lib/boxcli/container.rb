@@ -1,7 +1,15 @@
 module Boxcli
   class Container < OpenStruct
     def container_name
-      name + "-" + id
+      "#{name}-#{id}"
+    end
+
+    def mount_name
+      base = container_name
+      if uniqueId
+        base += "-" + uniqueId.to_s
+      end
+      base
     end
 
     def running?
@@ -13,9 +21,10 @@ module Boxcli
     end
 
     def status
-      info = `sudo lxc-info -n #{container_name}`
+      # going to have format `state: STATUS`
+      info = `sudo lxc-info -s -n #{mount_name}`
       info.each_line do |line|
-        return line.split(":")[1].strip!.downcase! if line.start_with?("state:")
+        return line.split(":")[1].strip!.downcase!
       end
     end
 
