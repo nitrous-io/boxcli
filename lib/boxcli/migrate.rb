@@ -8,6 +8,7 @@ module Boxcli
 
     def run
       return if @box.disk == @disk # already migrated
+      p "Start migrating: #{@box.container_name}"
 
       # set the box state to migrating
       @box.db_record.update_attribute :state, "migrating"
@@ -24,6 +25,7 @@ module Boxcli
       # lvm disk otherwise
       # if this is not an lvm box, then just copy directly from existing delta
       # folder to the new location
+      p "Start syncing: #{@box.container_name}"
       case @box.mount_method
       when "lvm"
         # create a tmp dir so we can mount old data
@@ -37,6 +39,7 @@ module Boxcli
       when "aufs"
         run "cp -a #{@box.delta_folder}/. #{destination_delta_path}"
       end
+      p "Finish syncing: #{@box.container_name}"
 
       # remove sys_boot in lxc config
       config_path = "#{destination_delta_path}/config"
@@ -53,6 +56,7 @@ module Boxcli
 
       # update version on rails
       @box.db_record.update_attributes state: "stopped", version: "drogo"
+      p "Finish migrating: #{@box.container_name}"
     end
 
     def umount_legacy
