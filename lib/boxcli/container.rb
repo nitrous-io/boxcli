@@ -1,5 +1,9 @@
 module Boxcli
   class Container < OpenStruct
+    def db_record
+      @record ||= Box.find id
+    end
+
     def container_name
       "#{name}-#{id}"
     end
@@ -10,6 +14,39 @@ module Boxcli
         base += "-" + uniqueId.to_s
       end
       base
+    end
+
+    def mount_method
+      if mount == "lvm"
+        "lvm"
+      elsif mount == "aufs" || quotaMethod == "prjquota"
+        "aufs"
+      end
+    end
+
+    def delta_folder
+      "#{disk}/#{container_name}_delta"
+    end
+
+    def enforce_usrquota
+      system "setquota -u #{uid} #{block_limit} #{block_limit} 0 0 #{disk}"
+    end
+
+    def stop
+      system "lxc-shutdown -n #{mount_name} -t 5"
+      system "lxc-wait -n #{mount_name} -s STOPPED"
+    end
+
+    def block_limit
+      diskSpace.to_i * 1024
+    end
+
+    def uid
+      id.to_i + 15000
+    end
+
+    def volume_group
+      selectedVG || 'boxhost'
     end
 
     def verify_iptable
